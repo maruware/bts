@@ -4,11 +4,15 @@ Post batch execution to Slack with a memo.
 
 ## Usage
 
-bts memo -- cmd...
+Execute
 
 ```
 $ bts "Changed C Param, It may improve accuracy" -- python some_job.py --input 001.json
 ```
+
+Then
+
+![ss](https://cloud.githubusercontent.com/assets/1129887/23509054/cd8545f6-ff97-11e6-9824-b26556db6ade.png)
 
 ## Install
 
