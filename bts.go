@@ -30,7 +30,7 @@ func printScanner(r io.Reader, colorFn func(string, ...interface{})) {
 	}
 }
 
-func execCommand(cmdWithArgs []string, onStart func(), onDone func()) {
+func execCommand(cmdWithArgs []string, onStart func(), onDone func(), onFailed func()) error {
 	var cmd *exec.Cmd
 	switch len(cmdWithArgs) {
 	case 1:
@@ -38,13 +38,12 @@ func execCommand(cmdWithArgs []string, onStart func(), onDone func()) {
 	default:
 		cmd = exec.Command(cmdWithArgs[0], cmdWithArgs[1:]...)
 	}
-	stdout, err := cmd.StdoutPipe()
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		os.Exit(1)
-	}
+	stdout, _ := cmd.StdoutPipe()
+	stderr, _ := cmd.StderrPipe()
 
-	cmd.Start()
+	if err := cmd.Start(); err != nil {
+		return err
+	}
 	color.Cyan("Executing: " + strings.Join(cmdWithArgs, " "))
 	onStart()
 
@@ -54,8 +53,12 @@ func execCommand(cmdWithArgs []string, onStart func(), onDone func()) {
 	red := color.New(color.FgRed).PrintfFunc()
 	printScanner(stderr, red)
 
-	cmd.Wait()
+	if err := cmd.Wait(); err != nil {
+		onFailed()
+		return err
+	}
 	onDone()
+	return nil
 }
 
 func findChannel(api *slack.Client, name string) (slack.Channel, error) {
@@ -84,7 +87,7 @@ func postSlack(api *slack.Client, channelName string, message string, params sla
 		color.Red("%s\n", err)
 		return
 	}
-	color.Cyan("Memo successfully sent to channel")
+	color.Cyan("Successfully sent to channel")
 }
 
 func postStartToSlack(api *slack.Client, channelName string, memo string, cmdWithArgs []string) {
@@ -100,6 +103,11 @@ func postStartToSlack(api *slack.Client, channelName string, memo string, cmdWit
 func postDoneToSlack(api *slack.Client, channelName string, cmdWithArgs []string) {
 	params := slack.PostMessageParameters{}
 	postSlack(api, channelName, "*Done*", params)
+}
+
+func postFailedToSlack(api *slack.Client, channelName string, cmdWithArgs []string) {
+	params := slack.PostMessageParameters{}
+	postSlack(api, channelName, "*Failed*", params)
 }
 
 func main() {
@@ -123,5 +131,8 @@ func main() {
 	onDone := func() {
 		postDoneToSlack(api, channelName, c)
 	}
-	execCommand(c, onStart, onDone)
+	onFailed := func() {
+		postFailedToSlack(api, channelName, c)
+	}
+	execCommand(c, onStart, onDone, onFailed)
 }
