@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-// bts "係数Cを調整。精度が上がるか。" -- python some_job.py --input 001.json
+// bts "Changed C Param, It may improve accuracy" -- python some_job.py --input 001.json
 
 var opts struct {
 	Args struct {
@@ -106,7 +106,8 @@ func main() {
 	_, err := flags.Parse(&opts)
 
 	if err != nil {
-		panic(err)
+		color.Red("%s\n", err)
+		return
 	}
 
 	token := os.Getenv("SLACK_TOKEN")
@@ -123,5 +124,4 @@ func main() {
 		postDoneToSlack(api, channelName, c)
 	}
 	execCommand(c, onStart, onDone)
-
 }
