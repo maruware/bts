@@ -4,14 +4,14 @@ import (
 	"bufio"
 	"fmt"
 
-	"github.com/fatih/color"
-	flags "github.com/jessevdk/go-flags"
-	"github.com/nlopes/slack"
-	// "github.com/nlopes/slack"
 	"io"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/fatih/color"
+	flags "github.com/jessevdk/go-flags"
+	"github.com/nlopes/slack"
 )
 
 // bts "Changed C Param, It may improve accuracy" -- python some_job.py --input 001.json
